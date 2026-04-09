@@ -5,9 +5,9 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-namespace OCA\Files_FullTextSearch_EXIF\Service;
+namespace OCA\Files_FullTextSearch_Metadata\Service;
 
-use OCA\Files_FullTextSearch_EXIF\AppInfo\Application;
+use OCA\Files_FullTextSearch_Metadata\AppInfo\Application;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\IConfig;
 
@@ -19,6 +19,8 @@ class ConfigService {
 	public const EXIF_FORMAT_TIFF = 'exif_format_tiff';
 	public const EXIF_FORMAT_PNG = 'exif_format_png';
 	public const EXIF_FORMAT_HEIC = 'exif_format_heic';
+	public const EXIF_FORMAT_AUDIO = 'exif_format_audio';
+	public const EXIF_FORMAT_VIDEO = 'exif_format_video';
 
 	public array $defaults = [
 		self::EXIF_ENABLED => '1',
@@ -26,7 +28,9 @@ class ConfigService {
 		self::EXIF_FORMAT_JPEG => '1',
 		self::EXIF_FORMAT_TIFF => '1',
 		self::EXIF_FORMAT_PNG => '1',
-		self::EXIF_FORMAT_HEIC => '1'
+		self::EXIF_FORMAT_HEIC => '1',
+		self::EXIF_FORMAT_AUDIO => '1',
+		self::EXIF_FORMAT_VIDEO => '1'
 	];
 
 	public function __construct(private IConfig $config) {
@@ -34,14 +38,16 @@ class ConfigService {
 
 	public function onGetConfig(GenericEvent $event): void {
 		$config = $event->getArgument('config');
-		$config['files_fulltextsearch_exif'] = [
+		$config['files_fulltextsearch_metadata'] = [
 			'version' => $this->getAppValue('installed_version'),
 			'enabled' => $this->getAppValue(self::EXIF_ENABLED),
 			'max_size_mb' => $this->getAppValue(self::EXIF_MAX_SIZE_MB),
 			'jpeg' => $this->getAppValue(self::EXIF_FORMAT_JPEG),
 			'tiff' => $this->getAppValue(self::EXIF_FORMAT_TIFF),
 			'png' => $this->getAppValue(self::EXIF_FORMAT_PNG),
-			'heic' => $this->getAppValue(self::EXIF_FORMAT_HEIC)
+			'heic' => $this->getAppValue(self::EXIF_FORMAT_HEIC),
+			'audio' => $this->getAppValue(self::EXIF_FORMAT_AUDIO),
+			'video' => $this->getAppValue(self::EXIF_FORMAT_VIDEO)
 		];
 		$event->setArgument('config', $config);
 	}

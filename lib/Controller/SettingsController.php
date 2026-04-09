@@ -5,10 +5,10 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-namespace OCA\Files_FullTextSearch_EXIF\Controller;
+namespace OCA\Files_FullTextSearch_Metadata\Controller;
 
-use OCA\Files_FullTextSearch_EXIF\AppInfo\Application;
-use OCA\Files_FullTextSearch_EXIF\Service\ConfigService;
+use OCA\Files_FullTextSearch_Metadata\AppInfo\Application;
+use OCA\Files_FullTextSearch_Metadata\Service\ConfigService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;

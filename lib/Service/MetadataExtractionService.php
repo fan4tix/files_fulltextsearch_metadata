@@ -5,11 +5,14 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-namespace OCA\Files_FullTextSearch_EXIF\Service;
+namespace OCA\Files_FullTextSearch_Metadata\Service;
 
 use Throwable;
 
 class MetadataExtractionService {
+
+	public function __construct(private AvMetadataExtractionService $avMetadataExtractionService) {
+	}
 
 	public function extract(string $path, string $mimeType): array {
 		if ($path === '' || !is_file($path) || !is_readable($path)) {
@@ -22,6 +25,8 @@ class MetadataExtractionService {
 				strpos($mimeType, 'image/tiff') === 0 => $this->extractTiff($path),
 				strpos($mimeType, 'image/png') === 0 => $this->extractPng($path),
 				strpos($mimeType, 'image/heic') === 0 => $this->extractHeic($path),
+				strpos($mimeType, 'audio/') === 0,
+				strpos($mimeType, 'video/') === 0 => $this->extractAv($path),
 				default => []
 			};
 		} catch (Throwable $e) {
@@ -119,6 +124,10 @@ class MetadataExtractionService {
 		return [];
 	}
 
+	private function extractAv(string $path): array {
+		return $this->normalize($this->avMetadataExtractionService->extract($path));
+	}
+
 	private function readExif(string $path): array {
 		if (!function_exists('exif_read_data')) {
 			return [];
@@ -159,10 +168,38 @@ class MetadataExtractionService {
 			return $this->normalizeArray($value);
 		}
 
+		if (is_string($value)) {
+			return $this->sanitizeString($value);
+		}
+
 		if (is_scalar($value) || $value === null) {
 			return $value;
 		}
 
 		return (string)$value;
+	}
+
+	private function sanitizeString(string $value): string {
+		$sanitized = $value;
+
+		if (!preg_match('//u', $sanitized)) {
+			if (function_exists('iconv')) {
+				$converted = @iconv('UTF-8', 'UTF-8//IGNORE', $sanitized);
+				if ($converted !== false) {
+					$sanitized = $converted;
+				} else {
+					$sanitized = '';
+				}
+			} else {
+				$sanitized = '';
+			}
+		}
+
+		$sanitized = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', ' ', $sanitized);
+		if (!is_string($sanitized)) {
+			return '';
+		}
+
+		return trim($sanitized);
 	}
 }

@@ -5,10 +5,10 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-namespace OCA\Files_FullTextSearch_EXIF\Listeners;
+namespace OCA\Files_FullTextSearch_Metadata\Listeners;
 
-use OCA\Files_FullTextSearch_EXIF\Service\ConfigService;
-use OCA\Files_FullTextSearch_EXIF\Service\ExifService;
+use OCA\Files_FullTextSearch_Metadata\Service\ConfigService;
+use OCA\Files_FullTextSearch_Metadata\Service\ExifService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventListener;

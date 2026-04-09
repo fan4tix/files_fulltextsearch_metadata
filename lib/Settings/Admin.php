@@ -5,11 +5,11 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-namespace OCA\Files_FullTextSearch_EXIF\Settings;
+namespace OCA\Files_FullTextSearch_Metadata\Settings;
 
 use Exception;
-use OCA\Files_FullTextSearch_EXIF\AppInfo\Application;
-use OCA\Files_FullTextSearch_EXIF\Service\ConfigService;
+use OCA\Files_FullTextSearch_Metadata\AppInfo\Application;
+use OCA\Files_FullTextSearch_Metadata\Service\ConfigService;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
 use OCP\IURLGenerator;

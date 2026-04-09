@@ -6,7 +6,7 @@ declare(strict_types=1);
  */
 
 spl_autoload_register(static function (string $class): void {
-	$prefix = 'OCA\\Files_FullTextSearch_EXIF\\';
+	$prefix = 'OCA\\Files_FullTextSearch_Metadata\\';
 	if (!str_starts_with($class, $prefix)) {
 		return;
 	}
@@ -18,12 +18,12 @@ spl_autoload_register(static function (string $class): void {
 	}
 });
 
-use OCA\Files_FullTextSearch_EXIF\Service\AcdsCategories;
-use OCA\Files_FullTextSearch_EXIF\Service\HeicMetadata;
-use OCA\Files_FullTextSearch_EXIF\Service\MetadataExtractionService;
-use OCA\Files_FullTextSearch_EXIF\Service\MetadataTextFormatter;
-use OCA\Files_FullTextSearch_EXIF\Service\PngMetadata;
-use OCA\Files_FullTextSearch_EXIF\Service\XmpMetadata;
+use OCA\Files_FullTextSearch_Metadata\Service\AcdsCategories;
+use OCA\Files_FullTextSearch_Metadata\Service\HeicMetadata;
+use OCA\Files_FullTextSearch_Metadata\Service\MetadataExtractionService;
+use OCA\Files_FullTextSearch_Metadata\Service\MetadataTextFormatter;
+use OCA\Files_FullTextSearch_Metadata\Service\PngMetadata;
+use OCA\Files_FullTextSearch_Metadata\Service\XmpMetadata;
 
 $tests = [];
 
@@ -39,15 +39,43 @@ $tests['formatter flattens nested metadata'] = static function (): void {
 	assertContains($text, 'XMP.tags: sea');
 };
 
+$tests['formatter prioritizes WINXP keywords over interop'] = static function (): void {
+	$text = MetadataTextFormatter::flatten([
+		'INTEROP' => [
+			'InterOperabilityIndex' => 'R98',
+			'InterOperabilityVersion' => '0100'
+		],
+		'WINXP' => [
+			'Keywords' => 'boat; mooring; sailing; flag'
+		]
+	]);
+
+	$lines = explode("\n", $text);
+	assertSame('WINXP.Keywords: boat; mooring; sailing; flag', $lines[0] ?? '');
+	assertNotContains($text, 'INTEROP.InterOperabilityIndex: R98');
+	assertNotContains($text, 'INTEROP.InterOperabilityVersion: 0100');
+};
+
+$tests['formatter keeps line boundaries in flattened output'] = static function (): void {
+	$text = MetadataTextFormatter::flatten([
+		'WINXP' => ['Keywords' => 'boat; mooring; sailing; flag'],
+		'IFD0' => ['Make' => 'Canon']
+	]);
+
+	assertContains($text, "\n");
+	assertContains($text, 'WINXP.Keywords: boat; mooring; sailing; flag');
+	assertContains($text, 'IFD0.Make: Canon');
+};
+
 $tests['extract handles missing file silently'] = static function (): void {
-	$service = new MetadataExtractionService();
+	$service = createMetadataExtractionService();
 	$res = $service->extract('/definitely/does/not/exist.jpg', 'image/jpeg');
 	assertTrue(is_array($res));
 	assertSame([], $res);
 };
 
 $tests['extract handles malformed jpeg silently'] = static function (): void {
-	$service = new MetadataExtractionService();
+	$service = createMetadataExtractionService();
 	$file = tempnam(sys_get_temp_dir(), 'exif-jpg-');
 	file_put_contents($file, "not-a-jpeg\n\x00\x01");
 	try {
@@ -59,11 +87,23 @@ $tests['extract handles malformed jpeg silently'] = static function (): void {
 };
 
 $tests['extract handles malformed png silently'] = static function (): void {
-	$service = new MetadataExtractionService();
+	$service = createMetadataExtractionService();
 	$file = tempnam(sys_get_temp_dir(), 'exif-png-');
 	file_put_contents($file, "\x89PNG\r\n\x1A\n" . str_repeat("\x00", 64));
 	try {
 		$res = $service->extract($file, 'image/png');
+		assertTrue(is_array($res));
+	} finally {
+		@unlink($file);
+	}
+};
+
+$tests['extract handles malformed audio silently'] = static function (): void {
+	$service = createMetadataExtractionService();
+	$file = tempnam(sys_get_temp_dir(), 'exif-mp3-');
+	file_put_contents($file, "not-an-mp3\n" . str_repeat("\x01", 64));
+	try {
+		$res = $service->extract($file, 'audio/mpeg');
 		assertTrue(is_array($res));
 	} finally {
 		@unlink($file);
@@ -139,5 +179,16 @@ function assertContains(string $haystack, string $needle, string $message = ''):
 	if (!str_contains($haystack, $needle)) {
 		$msg = $message !== '' ? $message : 'Expected string to contain substring';
 		throw new RuntimeException($msg . ': missing ' . $needle);
+	}
+}
+
+function createMetadataExtractionService(): MetadataExtractionService {
+	return new MetadataExtractionService(new \OCA\Files_FullTextSearch_Metadata\Service\AvMetadataExtractionService());
+}
+
+function assertNotContains(string $haystack, string $needle, string $message = ''): void {
+	if (str_contains($haystack, $needle)) {
+		$msg = $message !== '' ? $message : 'Expected string not to contain substring';
+		throw new RuntimeException($msg . ': found ' . $needle);
 	}
 }

@@ -1,0 +1,25 @@
+{
+  "name": "nextcloud/files_fulltextsearch_metadata",
+  "description": "Files - Fulltextsearch - Metadata",
+  "minimum-stability": "stable",
+  "license": "agpl",
+  "config": {
+    "optimize-autoloader": true,
+    "classmap-authoritative": true,
+    "autoloader-suffix": "Files_FullTextSearch_Metadata",
+    "platform": {
+      "php": "8.2"
+    }
+  },
+  "authors": [
+    {
+      "name": "Martin Schörner"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "OCA\\Files_FullTextSearch_Metadata\\": "lib/"
+    }
+  },
+  "require": {}
+}

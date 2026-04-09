@@ -3,3 +3,6 @@ lint:
 
 test:
 	php tests/run.php
+
+smoke-docker:
+	./scripts/smoke-docker.sh
